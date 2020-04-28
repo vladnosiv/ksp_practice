@@ -97,6 +97,15 @@ void Widget::do_turn() {
         if (winner == 'o') {
             ui->result->setText("You lost! Press here to play again");
         }
+        disconnect(ui->button11, SIGNAL(clicked(bool)), this, SLOT(set_X_11()));
+        disconnect(ui->button12, SIGNAL(clicked(bool)), this, SLOT(set_X_12()));
+        disconnect(ui->button13, SIGNAL(clicked(bool)), this, SLOT(set_X_13()));
+        disconnect(ui->button21, SIGNAL(clicked(bool)), this, SLOT(set_X_21()));
+        disconnect(ui->button22, SIGNAL(clicked(bool)), this, SLOT(set_X_22()));
+        disconnect(ui->button23, SIGNAL(clicked(bool)), this, SLOT(set_X_23()));
+        disconnect(ui->button31, SIGNAL(clicked(bool)), this, SLOT(set_X_31()));
+        disconnect(ui->button32, SIGNAL(clicked(bool)), this, SLOT(set_X_32()));
+        disconnect(ui->button33, SIGNAL(clicked(bool)), this, SLOT(set_X_33()));
     }
 }
 
