@@ -1,7 +1,10 @@
 #pragma once
+
 #include <QWidget>
 #include <QPushButton>
 #include <QString>
+
+#include <logic.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -44,6 +47,9 @@ public slots:
     void set_O_33();
 
     void restart();
+
+public:
+    Logic solver;
 
 public: ~Widget();
 };

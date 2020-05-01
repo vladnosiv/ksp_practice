@@ -1,22 +1,28 @@
 #pragma once
+
 #include <algorithm>
 
-class grid{
+#define GRID_SIZE 3
+
+class Grid{
 private:
-    char a[3][3];
+    char a[GRID_SIZE][GRID_SIZE];
 public:
-    grid(char filler);
-    char& operator() (size_t i, size_t j);
-    char& operator() (std::pair < size_t, size_t > x);
+    Grid() {}
+    Grid(char filler);
+    char& operator()(std::size_t i, std::size_t j);
+    char& operator()(std::pair < std::size_t, std::size_t > x);
     char get_winner();
-    bool check(int x1, int y1, int x2, int y2, char c);
+    inline bool check(int x1, int y1, int x2, int y2, char c);
 };
 
-class logic {
+class Logic {
 public:
-    logic(grid x);
-    std::pair < size_t, size_t > get_turn();
+    Logic() {}
+    Logic(Grid& x);
+    Logic(Grid&& x);
+    std::pair < std::size_t, std::size_t > get_turn();
 public:
-    grid a;
+    Grid grid;
 };
 
