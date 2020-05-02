@@ -1,67 +1,71 @@
-#include "logic.hpp"
 #include <algorithm>
 #include <vector>
+#include "logic.hpp"
 
-grid::grid(char filler) {
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            a[i][j] = filler;
-        }
-    }
+Grid::Grid(char filler) {
+    std::fill(&a[0][0], &a[GRID_SIZE - 1][GRID_SIZE - 1] + 1, filler);
 }
 
-char& grid::operator() (size_t i, size_t j) {
+char& Grid::operator()(std::size_t i, std::size_t j) {
     return a[i][j];
 }
 
-char& grid::operator() (std::pair<size_t, size_t> x) {
+char& Grid::operator()(std::pair<std::size_t, std::size_t> x) {
     return a[x.first][x.second];
 }
 
-bool grid::check(int x1, int y1, int x2, int y2, char c) {
-    return a[x1][y1] == a[x2][y2] && a[x2][y2] == c;
+inline bool Grid::check(int x1, int y1, int x2, int y2, char ch) {
+    return a[x1][y1] == a[x2][y2] && a[x2][y2] == ch;
 }
 
-char grid::get_winner() {
-    for (int i = 0; i < 3; i++) { // check rows
-        char c = a[i][0];
+char Grid::get_winner() {
+    for (int i = 0; i < GRID_SIZE; i++) { // check rows
+        char ch = a[i][0];
         bool flag = true;
-        for (int j = 1; j < 3 && flag; j++) {
-            flag &= (a[i][j] == c);
+        for (int j = 1; j < GRID_SIZE && flag; j++) {
+            flag &= (a[i][j] == ch);
         }
-        if (flag && c != '.') {
-            return c;
+        if (flag && ch != '.') {
+            return ch;
         }
     }
 
-    for (int j = 0; j < 3; j++) { // check columns
-        char c = a[0][j];
+    for (int j = 0; j < GRID_SIZE; j++) { // check columns
+        char ch = a[0][j];
         bool flag = true;
-        for (int i = 1; i < 3 && flag; i++) {
-            flag &= (a[i][j] == c);
+        for (int i = 1; i < GRID_SIZE && flag; i++) {
+            flag &= (a[i][j] == ch);
         }
-        if (flag && c != '.') {
-            return c;
+        if (flag && ch != '.') {
+            return ch;
         }
     }
 
-    char c = a[0][0];
+    char ch = a[0][0];
     bool flag = true;
 
-    for (int i = 1; i < 3 && flag; i++) { // check diagonals
-        flag &= (a[i][i] == c);
-    }
-    if (flag && c != '.') {
-        return c;
+    for (int i = 1; i < GRID_SIZE && flag; i++) { // check one diagonal
+        flag &= (a[i][i] == ch);
     }
 
-    if (a[2][0] == a[1][1] && a[1][1] == a[0][2] && a[1][1] != '.') {
-        return a[1][1];
+    if (flag) {
+        return ch;
     }
+
+    ch = a[GRID_SIZE - 1][0];
+    flag = true;
+    for (int i = GRID_SIZE - 2, j = 1; i >= 0 && flag; i--, j++) { // check another
+        flag &= (a[i][j] == ch);
+    }
+
+    if (flag) {
+        return ch;
+    }
+
 
     flag = true;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
             flag &= (a[i][j] != '.');
         }
     }
@@ -74,122 +78,215 @@ char grid::get_winner() {
     return '.';
 }
 
-logic::logic(grid x) : a(x) {}
+Logic::Logic(Grid& grid) : grid(grid) {}
+Logic::Logic(Grid&& grid) : grid(grid) {}
 
-const std::vector < std::pair < size_t, size_t > > angles = { { 0, 0 }, { 0, 2 }, { 2, 2 }, { 2, 0 } };
-const std::vector < std::pair < size_t, size_t > > sides = { { 1, 0 }, { 0, 1 }, { 1, 2 }, { 2, 1 } };
+const std::vector < std::pair < std::size_t, std::size_t > > angles = { { 0, 0 }, { 0, 2 }, { 2, 2 }, { 2, 0 } };
+const std::vector < std::pair < std::size_t, std::size_t > > sides = { { 1, 0 }, { 0, 1 }, { 1, 2 }, { 2, 1 } };
 
-std::pair < size_t, size_t > logic::get_turn() {
-    for (int i = 0; i < 3; i++) {                           // o o .   and   . o o   and   o . o
-        if (a.check(i, 0, i, 1, 'o') && a(i, 2) == '.') {
-            return { i, 2 };
-        }
-        if (a.check(i, 1, i, 2, 'o') && a(i, 0) == '.') {
-            return { i, 0 };
-        }
-        if (a.check(i, 0, i, 2, 'o') && a(i, 1) == '.') {
-            return { i, 1 };
-        }
-    }
+std::pair < std::size_t, std::size_t > Logic::get_turn() {
+    for (int i = 0; i < GRID_SIZE; i++) {     // check o o o ...  .  ... o o o
+        for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
+            if (grid(i, exclude) != '.') {
+                continue;
+            }
 
-    for (int j = 0; j < 3; j++) {                            // o         .          o
-        if (a.check(0, j, 1, j, 'o') && a(2, j) == '.') {    // o   and   o    and   .
-            return { 2, j };                                 // .         o          o
-        }
-        if (a.check(1, j, 2, j, 'o') && a(0, j) == '.') {
-            return { 0, j };
-        }
-        if (a.check(0, j, 2, j, 'o') && a(1, j) == '.') {
-            return { 1, j };
-        }
-    }
+            char ch = (exclude == 0 ? grid(i, 1) : grid(i, 0));
+            if (ch != 'o') {
+                continue;
+            }
 
-    if (a.check(0, 0, 1, 1, 'o') && a(2, 2) == '.') {
-        return { 2, 2 };
-    }
-    if (a.check(1, 1, 2, 2, 'o') && a(0, 0) == '.') {
-        return { 0, 0 };
-    }
-    if (a.check(0, 0, 2, 2, 'o') && a(1, 1) == '.') {
-        return { 1, 1 };
-    }
-    if (a.check(0, 2, 1, 1, 'o') && a(2, 0) == '.') {
-        return { 2, 0 };
-    }
-    if (a.check(1, 1, 2, 0, 'o') && a(0, 2) == '.') {
-        return { 0, 2 };
-    }
-    if (a.check(0, 2, 2, 0, 'o') && a(1, 1) == '.') {
-        return { 1, 1 };
-    }
-
-
-    for (int i = 0; i < 3; i++) {                           // x x .   and   . x x   and   x . x
-        if (a.check(i, 0, i, 1, 'x') && a(i, 2) == '.') {
-            return { i, 2 };
+            bool flag = true;
+            for (int j = 0; j < GRID_SIZE && flag; j++) {
+                if (j != exclude) {
+                    flag &= (ch == grid(i, j));
+                }
+            }
+            if (flag) {
+                return { i, exclude };
+            }
         }
-        if (a.check(i, 1, i, 2, 'x') && a(i, 0) == '.') {
-            return { i, 0 };
-        }
-        if (a.check(i, 0, i, 2, 'x') && a(i, 1) == '.') {
-            return { i, 1 };
+    }
+                                                                // check
+    for (int j = 0; j < GRID_SIZE; j++) {                       //       o
+        for (int exclude = 0; exclude < GRID_SIZE; exclude++) { //       o
+            if (grid(exclude, j) != '.') {                      //       o
+                continue;                                       //      ...
+            }                                                   //       .
+                                                                //      ...
+            char ch = (exclude == 0 ? grid(1, j) : grid(0, j)); //       o
+            if (ch != 'o') {                                    //       o
+                continue;                                       //       o
+            }
+
+            bool flag = true;
+            for (int i = 0; i < GRID_SIZE && flag; i++) {
+                if (i != exclude) {
+                    flag &= (ch == grid(i, j));
+                }
+            }
+            if (flag) {
+                return { exclude, j };
+            }
         }
     }
 
-    for (int j = 0; j < 3; j++) {                            // x         .          x
-        if (a.check(0, j, 1, j, 'x') && a(2, j) == '.') {    // x   and   x    and   .
-            return { 2, j };                                 // .         x          x
+    for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
+        if (grid(exclude, exclude) != '.') {
+            continue;
         }
-        if (a.check(1, j, 2, j, 'x') && a(0, j) == '.') {
-            return { 0, j };
+
+        char ch = (exclude == 0 ? grid(1, 1) : grid(0, 0));
+        if (ch != 'o') {
+            continue;
         }
-        if (a.check(0, j, 2, j, 'x') && a(1, j) == '.') {
-            return { 1, j };
+
+        bool flag = true;
+        for (int i = 0; i < GRID_SIZE; i++) {
+            if (i != exclude) {
+                flag &= (ch == grid(i, i));
+            }
+        }
+        if (flag) {
+            return { exclude, exclude };
         }
     }
 
-    if (a.check(0, 0, 1, 1, 'x') && a(2, 2) == '.') {
-        return { 2, 2 };
-    }
-    if (a.check(1, 1, 2, 2, 'x') && a(0, 0) == '.') {
-        return { 0, 0 };
-    }
-    if (a.check(0, 0, 2, 2, 'x') && a(1, 1) == '.') {
-        return { 1, 1 };
-    }
-    if (a.check(0, 2, 1, 1, 'x') && a(2, 0) == '.') {
-        return { 2, 0 };
-    }
-    if (a.check(1, 1, 2, 0, 'x') && a(0, 2) == '.') {
-        return { 0, 2 };
-    }
-    if (a.check(0, 2, 2, 0, 'x') && a(1, 1) == '.') {
-        return { 1, 1 };
+    for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
+        if (grid(exclude, GRID_SIZE - exclude - 1) != '.') {
+            continue;
+        }
+
+        char ch = (exclude == 0 ? grid(1, GRID_SIZE - 2) : grid(0, GRID_SIZE - 1));
+        if (ch != 'o') {
+            continue;
+        }
+
+        bool flag = true;
+        for (int i = 0; i < GRID_SIZE; i++) {
+            if (i != exclude) {
+                flag &= (ch == grid(i, GRID_SIZE - i - 1));
+            }
+        }
+        if (flag) {
+            return { exclude, GRID_SIZE - exclude - 1 };
+        }
     }
 
+    /////////////////////////////////////////////////////////////////////////////////
 
-    if (a(1, 1) != '.') {
-        if (a(1, 1) == 'x') {
+    for (int i = 0; i < GRID_SIZE; i++) {     // check x x x ...  .  ... x x x
+        for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
+            if (grid(i, exclude) != '.') {
+                continue;
+            }
+
+            char ch = (exclude == 0 ? grid(i, 1) : grid(i, 0));
+            if (ch != 'x') {
+                continue;
+            }
+
+            bool flag = true;
+            for (int j = 0; j < GRID_SIZE && flag; j++) {
+                if (j != exclude) {
+                    flag &= (ch == grid(i, j));
+                }
+            }
+            if (flag) {
+                return { i, exclude };
+            }
+        }
+    }
+                                                                // check
+    for (int j = 0; j < GRID_SIZE; j++) {                       //       x
+        for (int exclude = 0; exclude < GRID_SIZE; exclude++) { //       x
+            if (grid(exclude, j) != '.') {                      //       x
+                continue;                                       //      ...
+            }                                                   //       .
+                                                                //      ...
+            char ch = (exclude == 0 ? grid(1, j) : grid(0, j)); //       x
+            if (ch != 'x') {                                    //       x
+                continue;                                       //       x
+            }
+
+            bool flag = true;
+            for (int i = 0; i < GRID_SIZE && flag; i++) {
+                if (i != exclude) {
+                    flag &= (ch == grid(i, j));
+                }
+            }
+            if (flag) {
+                return { exclude, j };
+            }
+        }
+    }
+
+    for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
+        if (grid(exclude, exclude) != '.') {
+            continue;
+        }
+
+        char ch = (exclude == 0 ? grid(1, 1) : grid(0, 0));
+        if (ch != 'x') {
+            continue;
+        }
+
+        bool flag = true;
+        for (int i = 0; i < GRID_SIZE; i++) {
+            if (i != exclude) {
+                flag &= (ch == grid(i, i));
+            }
+        }
+        if (flag) {
+            return { exclude, exclude };
+        }
+    }
+
+    for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
+        if (grid(exclude, GRID_SIZE - exclude - 1) != '.') {
+            continue;
+        }
+
+        char ch = (exclude == 0 ? grid(1, GRID_SIZE - 2) : grid(0, GRID_SIZE - 1));
+        if (ch != 'x') {
+            continue;
+        }
+
+        bool flag = true;
+        for (int i = 0; i < GRID_SIZE; i++) {
+            if (i != exclude) {
+                flag &= (ch == grid(i, GRID_SIZE - i - 1));
+            }
+        }
+        if (flag) {
+            return { exclude, GRID_SIZE - exclude - 1 };
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////
+
+    if (grid(1, 1) != '.') {
+        if (grid(1, 1) == 'x') {
             for (auto x : angles) {
-                if (a(x) == '.') {
+                if (grid(x) == '.') {
                     return x;
                 }
             }
 
             for (auto x : sides) {
-                if (a(x) == '.') {
+                if (grid(x) == '.') {
                     return x;
                 }
             }
         }
         else {
             for (int i = 0; i < 4; i++) {
-                if ((a(angles[(i + 3) % 4]) == 'x' || a(angles[(i + 1) % 4]) == 'x') && a(angles[i]) == '.') {
+                if ((grid(angles[(i + 3) % 4]) == 'x' || grid(angles[(i + 1) % 4]) == 'x') && grid(angles[i]) == '.') {
                     return angles[i];
                 }
             }
             for (int i = 0; i < 4; i++) {
-                if (a(sides[i]) == 'x' && a(sides[(i + 1) % 4]) == 'x') {
+                if (grid(sides[i]) == 'x' && grid(sides[(i + 1) % 4]) == 'x') {
                     if (i % 2 == 0) {
                         return { sides[i].second, sides[(i + 1) % 4].first };
                     }
@@ -201,7 +298,7 @@ std::pair < size_t, size_t > logic::get_turn() {
 
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
-                    if (a(i, j) == '.') {
+                    if (grid(i, j) == '.') {
                         return { i, j };
                     }
                 }

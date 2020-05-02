@@ -1,10 +1,10 @@
 #include "widget.h"
 #include "./ui_widget.h"
-#include <logic.hpp>
-#include <iostream>
+#include "logic.hpp"
 
-Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget) {
+Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), solver(Grid('.')) {
     ui->setupUi(this);
+    ui->result->setFlat(true);
     connect(ui->button11, SIGNAL(clicked(bool)), this, SLOT(set_X_11()));
     connect(ui->button12, SIGNAL(clicked(bool)), this, SLOT(set_X_12()));
     connect(ui->button13, SIGNAL(clicked(bool)), this, SLOT(set_X_13()));
@@ -20,10 +20,9 @@ Widget::~Widget() {
     delete ui;
 }
 
-logic solver(grid('.'));
-
 void Widget::restart() {
     disconnect(ui->result, SIGNAL(clicked(bool)), this, SLOT(restart()));
+    ui->result->setFlat(true);
     ui->result->setText("");
     ui->button11->setText("");
     ui->button12->setText("");
@@ -34,7 +33,7 @@ void Widget::restart() {
     ui->button31->setText("");
     ui->button32->setText("");
     ui->button33->setText("");
-    solver = logic(grid('.'));
+    solver = Logic(Grid('.'));
     connect(ui->button11, SIGNAL(clicked(bool)), this, SLOT(set_X_11()));
     connect(ui->button12, SIGNAL(clicked(bool)), this, SLOT(set_X_12()));
     connect(ui->button13, SIGNAL(clicked(bool)), this, SLOT(set_X_13()));
@@ -48,13 +47,11 @@ void Widget::restart() {
 
 
 void Widget::do_turn() {
-    auto turn = solver.get_turn();
-    solver.a(turn) = 'o';
+    std::pair <std::size_t, std::size_t> turn = solver.get_turn();
+    solver.grid(turn) = 'o';
     auto [x, y] = turn;
     if (x != 4 && y != 4) {
         x++, y++;
-
-        //std::cout << x << " " << y << std::endl;
 
         if (x == 1 && y == 1) {
             set_O_11();
@@ -85,7 +82,7 @@ void Widget::do_turn() {
         }
     }
 
-    char winner = solver.a.get_winner();
+    char winner = solver.grid.get_winner();
     if (winner != '.') {
         connect(ui->result, SIGNAL(clicked(bool)), this, SLOT(restart()));
         if (winner == 'x') {
@@ -97,6 +94,7 @@ void Widget::do_turn() {
         if (winner == 'o') {
             ui->result->setText("You lost! Press here to play again");
         }
+        ui->result->setFlat(false);
         disconnect(ui->button11, SIGNAL(clicked(bool)), this, SLOT(set_X_11()));
         disconnect(ui->button12, SIGNAL(clicked(bool)), this, SLOT(set_X_12()));
         disconnect(ui->button13, SIGNAL(clicked(bool)), this, SLOT(set_X_13()));
@@ -111,7 +109,7 @@ void Widget::do_turn() {
 
 void Widget::set_X_11() {
     ui->button11->setText(QString("X"));
-    solver.a(0, 0) = 'x';
+    solver.grid(0, 0) = 'x';
     disconnect(ui->button11, SIGNAL(clicked(bool)), this, SLOT(set_X_11()));
     do_turn();
 }
@@ -122,7 +120,7 @@ void Widget::set_O_11() {
 
 void Widget::set_X_12() {
     ui->button12->setText(QString("X"));
-    solver.a(0, 1) = 'x';
+    solver.grid(0, 1) = 'x';
     disconnect(ui->button12, SIGNAL(clicked(bool)), this, SLOT(set_X_12()));
     do_turn();
 }
@@ -133,7 +131,7 @@ void Widget::set_O_12() {
 
 void Widget::set_X_13() {
     ui->button13->setText(QString("X"));
-    solver.a(0, 2) = 'x';
+    solver.grid(0, 2) = 'x';
     disconnect(ui->button13, SIGNAL(clicked(bool)), this, SLOT(set_X_13()));
     do_turn();
 }
@@ -145,7 +143,7 @@ void Widget::set_O_13() {
 
 void Widget::set_X_21() {
     ui->button21->setText(QString("X"));
-    solver.a(1, 0) = 'x';
+    solver.grid(1, 0) = 'x';
     disconnect(ui->button21, SIGNAL(clicked(bool)), this, SLOT(set_X_21()));
     do_turn();
 }
@@ -156,9 +154,9 @@ void Widget::set_O_21() {
 
 void Widget::set_X_22() {
     ui->button22->setText(QString("X"));
-    solver.a(1, 1) = 'x';
+    solver.grid(1, 1) = 'x';
     disconnect(ui->button22, SIGNAL(clicked(bool)), this, SLOT(set_X_22()));
-    do_turn();
+    do_turn();/////////////////////////////////////////////////////
 }
 void Widget::set_O_22() {
     ui->button22->setText(QString("O"));
@@ -167,7 +165,7 @@ void Widget::set_O_22() {
 
 void Widget::set_X_23() {
     ui->button23->setText(QString("X"));
-    solver.a(1, 2) = 'x';
+    solver.grid(1, 2) = 'x';
     disconnect(ui->button23, SIGNAL(clicked(bool)), this, SLOT(set_X_23()));
     do_turn();
 }
@@ -178,7 +176,7 @@ void Widget::set_O_23() {
 
 void Widget::set_X_31() {
     ui->button31->setText(QString("X"));
-    solver.a(2, 0) = 'x';
+    solver.grid(2, 0) = 'x';
     disconnect(ui->button31, SIGNAL(clicked(bool)), this, SLOT(set_X_31()));
     do_turn();
 }
@@ -189,7 +187,7 @@ void Widget::set_O_31() {
 
 void Widget::set_X_32() {
     ui->button32->setText(QString("X"));
-    solver.a(2, 1) = 'x';
+    solver.grid(2, 1) = 'x';
     disconnect(ui->button32, SIGNAL(clicked(bool)), this, SLOT(set_X_32()));
     do_turn();
 }
@@ -200,7 +198,7 @@ void Widget::set_O_32() {
 
 void Widget::set_X_33() {
     ui->button33->setText(QString("X"));
-    solver.a(2, 2) = 'x';
+    solver.grid(2, 2) = 'x';
     disconnect(ui->button33, SIGNAL(clicked(bool)), this, SLOT(set_X_33()));
     do_turn();
 }
