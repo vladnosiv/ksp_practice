@@ -1,0 +1,4 @@
+/home/timoxa/git/ksp_practice/homework/ticTacToe/Timofey/build-ticTacToe-Desktop-Debug/CMakeFiles/rebuild_cache.dir
+/home/timoxa/git/ksp_practice/homework/ticTacToe/Timofey/build-ticTacToe-Desktop-Debug/CMakeFiles/ticTacToe.dir
+/home/timoxa/git/ksp_practice/homework/ticTacToe/Timofey/build-ticTacToe-Desktop-Debug/CMakeFiles/edit_cache.dir
+/home/timoxa/git/ksp_practice/homework/ticTacToe/Timofey/build-ticTacToe-Desktop-Debug/CMakeFiles/ticTacToe_autogen.dir
