@@ -17,6 +17,9 @@ public:
 
 public slots:
     void exit();
+    void click(int x, int y);
+    void clear();
+    void doturn();
 
 private:
     Ui::MainWindow *ui;
