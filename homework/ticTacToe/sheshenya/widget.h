@@ -4,7 +4,8 @@
 #include <QPushButton>
 #include <QString>
 
-#include <logic.hpp>
+#include "logic.hpp"
+#include "startdialog.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -48,9 +49,11 @@ public slots:
 
     void restart();
 
-public:
-    Logic solver;
+public: Logic solver;
+private: int difficulty;
+
 
 public: ~Widget();
 };
+
 
