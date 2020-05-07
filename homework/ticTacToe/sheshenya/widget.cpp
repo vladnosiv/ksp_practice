@@ -6,6 +6,8 @@
 
 #include "startdialog.hpp"
 
+#include <iostream>
+
 std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
 Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), solver(Grid('.')) {
@@ -24,6 +26,9 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), solver(Gr
     StartDialog *start = new StartDialog(this);
     start->exec();
     difficulty = start->difficulty;
+    if (!difficulty) {
+        this->close();
+    }
 }
 
 Widget::~Widget() {
@@ -57,6 +62,9 @@ void Widget::restart() {
     StartDialog *start = new StartDialog(this);
     start->exec();
     difficulty = start->difficulty;
+    if (!difficulty) {
+        this->close();
+    }
 }
 
 int rng_on(int l, int r) {

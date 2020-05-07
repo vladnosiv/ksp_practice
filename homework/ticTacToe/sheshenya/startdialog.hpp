@@ -8,14 +8,8 @@ class StartDialog : public QDialog {
     Q_OBJECT
 public:
     StartDialog(QWidget *parent = nullptr);
-    ~StartDialog() {}
+    ~StartDialog();
 
-public slots:
-    void start_game();
-    void change_text(int value);
-private:
-    QSpinBox *input;
-    QLabel *level;
 public: int difficulty;
 
 };
