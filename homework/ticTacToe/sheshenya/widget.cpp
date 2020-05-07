@@ -1,10 +1,16 @@
 #include "widget.h"
 #include "./ui_widget.h"
 #include "logic.hpp"
+#include <chrono>
+#include <random>
+
+#include "startdialog.hpp"
+
+std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
 Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), solver(Grid('.')) {
     ui->setupUi(this);
-    ui->result->setFlat(true);
+    ui->result->hide();
     connect(ui->button11, SIGNAL(clicked(bool)), this, SLOT(set_X_11()));
     connect(ui->button12, SIGNAL(clicked(bool)), this, SLOT(set_X_12()));
     connect(ui->button13, SIGNAL(clicked(bool)), this, SLOT(set_X_13()));
@@ -14,6 +20,10 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), solver(Gr
     connect(ui->button31, SIGNAL(clicked(bool)), this, SLOT(set_X_31()));
     connect(ui->button32, SIGNAL(clicked(bool)), this, SLOT(set_X_32()));
     connect(ui->button33, SIGNAL(clicked(bool)), this, SLOT(set_X_33()));
+
+    StartDialog *start = new StartDialog(this);
+    start->exec();
+    difficulty = start->difficulty;
 }
 
 Widget::~Widget() {
@@ -22,7 +32,7 @@ Widget::~Widget() {
 
 void Widget::restart() {
     disconnect(ui->result, SIGNAL(clicked(bool)), this, SLOT(restart()));
-    ui->result->setFlat(true);
+    ui->result->hide();
     ui->result->setText("");
     ui->button11->setText("");
     ui->button12->setText("");
@@ -43,42 +53,63 @@ void Widget::restart() {
     connect(ui->button31, SIGNAL(clicked(bool)), this, SLOT(set_X_31()));
     connect(ui->button32, SIGNAL(clicked(bool)), this, SLOT(set_X_32()));
     connect(ui->button33, SIGNAL(clicked(bool)), this, SLOT(set_X_33()));
+
+    StartDialog *start = new StartDialog(this);
+    start->exec();
+    difficulty = start->difficulty;
 }
 
+int rng_on(int l, int r) {
+    return rng() % (r - l + 1) + l;
+}
 
 void Widget::do_turn() {
-    std::pair <std::size_t, std::size_t> turn = solver.get_turn();
-    solver.grid(turn) = 'o';
-    auto [x, y] = turn;
-    if (x != 4 && y != 4) {
-        x++, y++;
+    if (solver.grid.get_winner() == '.') {
+        auto turns = solver.get_turns();
+        std::pair <std::size_t, std::size_t> turn;
 
-        if (x == 1 && y == 1) {
-            set_O_11();
+        if (difficulty == 1) {
+            turn = turns[rng_on(0, turns.size() - 1)];
         }
-        else if (x == 1 && y == 2) {
-            set_O_12();
+        if (difficulty == 2) {
+            turn = turns[rng_on(0, turns.size() / 2)];
         }
-        else if (x == 1 && y == 3) {
-            set_O_13();
+        if (difficulty == 3) {
+            turn = turns.front();
         }
-        else if (x == 2 && y == 1) {
-            set_O_21();
-        }
-        else if (x == 2 && y == 2) {
-            set_O_22();
-        }
-        else if (x == 2 && y == 3) {
-            set_O_23();
-        }
-        else if (x == 3 && y == 1) {
-            set_O_31();
-        }
-        else if (x == 3 && y == 2) {
-            set_O_32();
-        }
-        else if (x == 3 && y == 3) {
-            set_O_33();
+
+        solver.grid(turn) = 'o';
+        auto [x, y] = turn;
+        if (x != 4 && y != 4) {
+            x++, y++;
+
+            if (x == 1 && y == 1) {
+                set_O_11();
+            }
+            else if (x == 1 && y == 2) {
+                set_O_12();
+            }
+            else if (x == 1 && y == 3) {
+                set_O_13();
+            }
+            else if (x == 2 && y == 1) {
+                set_O_21();
+            }
+            else if (x == 2 && y == 2) {
+                set_O_22();
+            }
+            else if (x == 2 && y == 3) {
+                set_O_23();
+            }
+            else if (x == 3 && y == 1) {
+                set_O_31();
+            }
+            else if (x == 3 && y == 2) {
+                set_O_32();
+            }
+            else if (x == 3 && y == 3) {
+                set_O_33();
+            }
         }
     }
 
@@ -94,7 +125,7 @@ void Widget::do_turn() {
         if (winner == 'o') {
             ui->result->setText("You lost! Press here to play again");
         }
-        ui->result->setFlat(false);
+        ui->result->show();
         disconnect(ui->button11, SIGNAL(clicked(bool)), this, SLOT(set_X_11()));
         disconnect(ui->button12, SIGNAL(clicked(bool)), this, SLOT(set_X_12()));
         disconnect(ui->button13, SIGNAL(clicked(bool)), this, SLOT(set_X_13()));

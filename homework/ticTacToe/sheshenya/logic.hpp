@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <vector>
 
 #define GRID_SIZE 3
 
@@ -21,7 +22,7 @@ public:
     Logic() {}
     Logic(Grid& x);
     Logic(Grid&& x);
-    std::pair < std::size_t, std::size_t > get_turn();
+    std::vector <std::pair < std::size_t, std::size_t > > get_turns();
 public:
     Grid grid;
 };

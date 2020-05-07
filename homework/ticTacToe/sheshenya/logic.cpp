@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <vector>
+#include <cstring>
+
 #include "logic.hpp"
 
 Grid::Grid(char filler) {
@@ -84,8 +86,10 @@ Logic::Logic(Grid&& grid) : grid(grid) {}
 const std::vector < std::pair < std::size_t, std::size_t > > angles = { { 0, 0 }, { 0, 2 }, { 2, 2 }, { 2, 0 } };
 const std::vector < std::pair < std::size_t, std::size_t > > sides = { { 1, 0 }, { 0, 1 }, { 1, 2 }, { 2, 1 } };
 
-std::pair < std::size_t, std::size_t > Logic::get_turn() {
-    for (int i = 0; i < GRID_SIZE; i++) {     // check o o o ...  .  ... o o o
+std::vector <std::pair < std::size_t, std::size_t > > Logic::get_turns() {
+    std::vector < std::pair <std::size_t, std::size_t> > res;
+
+    for (int i = 0; i < GRID_SIZE; i++) {                       // check o o o ...  .  ... o o o
         for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
             if (grid(i, exclude) != '.') {
                 continue;
@@ -103,7 +107,7 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
                 }
             }
             if (flag) {
-                return { i, exclude };
+                res.push_back({ i, exclude });
             }
         }
     }
@@ -126,7 +130,7 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
                 }
             }
             if (flag) {
-                return { exclude, j };
+                res.push_back({ exclude, j });
             }
         }
     }
@@ -148,7 +152,7 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
             }
         }
         if (flag) {
-            return { exclude, exclude };
+            res.push_back({ exclude, exclude });
         }
     }
 
@@ -169,13 +173,13 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
             }
         }
         if (flag) {
-            return { exclude, GRID_SIZE - exclude - 1 };
+            res.push_back({ exclude, GRID_SIZE - exclude - 1 });
         }
     }
 
     /////////////////////////////////////////////////////////////////////////////////
 
-    for (int i = 0; i < GRID_SIZE; i++) {     // check x x x ...  .  ... x x x
+    for (int i = 0; i < GRID_SIZE; i++) {                      // check x x x ...  .  ... x x x
         for (int exclude = 0; exclude < GRID_SIZE; exclude++) {
             if (grid(i, exclude) != '.') {
                 continue;
@@ -193,7 +197,7 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
                 }
             }
             if (flag) {
-                return { i, exclude };
+                res.push_back({ i, exclude });
             }
         }
     }
@@ -216,7 +220,7 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
                 }
             }
             if (flag) {
-                return { exclude, j };
+                res.push_back({ exclude, j });
             }
         }
     }
@@ -238,7 +242,7 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
             }
         }
         if (flag) {
-            return { exclude, exclude };
+            res.push_back({ exclude, exclude });
         }
     }
 
@@ -259,55 +263,128 @@ std::pair < std::size_t, std::size_t > Logic::get_turn() {
             }
         }
         if (flag) {
-            return { exclude, GRID_SIZE - exclude - 1 };
+            res.push_back({ exclude, GRID_SIZE - exclude - 1 });
         }
     }
 
     /////////////////////////////////////////////////////////////////////////////////
 
-    if (grid(1, 1) != '.') {
-        if (grid(1, 1) == 'x') {
-            for (auto x : angles) {
-                if (grid(x) == '.') {
-                    return x;
-                }
-            }
+    if (grid(1, 1) == '.') {
+        res.push_back({ 1, 1 });
+    }
 
-            for (auto x : sides) {
-                if (grid(x) == '.') {
-                    return x;
-                }
+    if (grid(1, 1) == 'x') {
+        for (auto x : angles) {
+            if (grid(x) == '.') {
+                res.push_back(x);
             }
         }
-        else {
-            for (int i = 0; i < 4; i++) {
-                if ((grid(angles[(i + 3) % 4]) == 'x' || grid(angles[(i + 1) % 4]) == 'x') && grid(angles[i]) == '.') {
-                    return angles[i];
-                }
-            }
-            for (int i = 0; i < 4; i++) {
-                if (grid(sides[i]) == 'x' && grid(sides[(i + 1) % 4]) == 'x') {
-                    if (i % 2 == 0) {
-                        return { sides[i].second, sides[(i + 1) % 4].first };
-                    }
-                    else {
-                        return { sides[i].first, sides[(i + 1) % 4].second };
-                    }
-                }
-            }
 
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    if (grid(i, j) == '.') {
-                        return { i, j };
-                    }
-                }
+        for (auto x : sides) {
+            if (grid(x) == '.') {
+                res.push_back(x);
             }
         }
     }
     else {
-        return { 1, 1 };
+        int cntRow[GRID_SIZE], cntCol[GRID_SIZE], d1 = 0, d2 = 0;
+        memset(cntRow, 0, sizeof cntRow);
+        memset(cntCol, 0, sizeof cntCol);
+
+        for (int i = 0; i < GRID_SIZE; i++) {
+            char x = 0;
+            bool flag = true;
+            for (int j = 0; j < GRID_SIZE; j++) {
+                flag &= (grid(i, j) != 'o');
+                x ^= grid(i, j);
+            }
+            if (x == 'x' && flag) {
+                cntRow[i] = 1;
+            }
+        }
+
+        for (int j = 0; j < GRID_SIZE; j++) {
+            char x = 0;
+            bool flag = true;
+            for (int i = 0; i < GRID_SIZE; i++) {
+                flag &= (grid(i, j) != 'o');
+                x ^= grid(i, j);
+            }
+            if (x == 'x' && flag) {
+                cntCol[j] = 1;
+            }
+        }
+
+        char x = 0;
+        bool flag = true;
+        for (int i = 0; i < GRID_SIZE; i++) {
+            flag &= (grid(i, i) != 'o');
+            x ^= grid(i, i);
+        }
+        if (x == 'x' && flag) {
+            d1 = 1;
+        }
+
+        x = 0;
+        flag = true;
+        for (int i = 0, j = GRID_SIZE - 1; i < GRID_SIZE; i++, j--) {
+            flag &= (grid(i, j) != 'o');
+            x ^= grid(i, j);
+        }
+        if (x == 'x' && flag) {
+            d2 = 1;
+        }
+
+
+        int max = 0, ind;
+        for (std::size_t i = 0; i < angles.size(); i++) {
+            auto [x, y] = angles[i];
+            int cnt = cntRow[x] + cntCol[y];
+            if (x == y) {
+                cnt += d1;
+            }
+            else {
+                cnt += d2;
+            }
+            if (cnt > max && grid(angles[i]) == '.') {
+                max = cnt;
+                ind = i;
+            }
+        }
+
+        if (max > 0) {
+            res.push_back(angles[ind]);
+            for (int i = 0; i < 4; i++) {
+                if (i != ind && grid(angles[i]) == '.') {
+                    res.push_back(angles[i]);
+                }
+            }
+        }
+
+
+        for (std::size_t i = 0; i < sides.size(); i++) {
+            if (grid(sides[i]) == 'x' && grid(sides[(i + 1) % 4]) == 'x') {
+                if (i % 2 == 0) {
+                    if (grid(sides[i].second, sides[(i + 1) % 4].first) == '.') {
+                        res.push_back({ sides[i].second, sides[(i + 1) % 4].first });
+                    }
+                }
+                else {
+                    if (grid(sides[i].first, sides[(i + 1) % 4].second) == '.') {
+                        res.push_back({ sides[i].first, sides[(i + 1) % 4].second });
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (grid(i, j) == '.') {
+                    res.push_back({ i, j });
+                }
+            }
+        }
     }
 
-    return { 4, 4 };
+    return res;
 }
